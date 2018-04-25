@@ -21,7 +21,7 @@ double dt = 0.100;  // for 100ms equivalent to latency
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
-double ref_v = 70;
+double ref_v = 55;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -104,7 +104,7 @@ class FG_eval {
       // Only consider the actuation at time t.
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];      
-      if (t > 1) {   // for considering latency, previous actuations need to be set for states at t=2 onwards 
+      if (t > 1) {   // for considering latency, previous actuations need to be set for states at t=2 onwards / after current state
         delta0 = vars[delta_start + t - 2];
         a0 = vars[a_start + t - 2];
       }

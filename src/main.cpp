@@ -101,31 +101,30 @@ int main() {
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
 
-          vector<double> waypoints_x;
-          vector<double> waypoints_y;
+          vector<double> x_transformed_car_coord;
+          vector<double> y_transformed_car_coord;
 
-          // transform waypoints to be from car's perspective
-          // this means we can consider px = 0, py = 0, and psi = 0
-          // greatly simplifying future calculations
+          // transform waypoints from map coordinate to car's coordinate system
           for (unsigned int i = 0; i < ptsx.size(); i++) {
-            double dx = ptsx[i] - px;
-            double dy = ptsy[i] - py;
-            waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
-            waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+            double x_translated = ptsx[i] - px;
+            double y_translated = ptsy[i] - py;
+            x_transformed_car_coord.push_back(x_translated * cos(-psi) - y_translated * sin(-psi));
+            y_transformed_car_coord.push_back(x_translated * sin(-psi) + y_translated * cos(-psi));
           }
 
-          double* ptrx = &waypoints_x[0];
-          double* ptry = &waypoints_y[0];
-          Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
-          Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
+          double* ptrx = &x_transformed_car_coord[0];
+          double* ptry = &y_transformed_car_coord[0];
+          Eigen::Map<Eigen::VectorXd> x_eigen(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> y_eigen(ptry, 6);
 
-          auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
+          auto coeffs = polyfit(x_eigen, y_eigen, 3);
           double cte = polyeval(coeffs, 0);  // px = 0, py = 0
-          double epsi = -atan(coeffs[1]);  // p
+          double epsi = -atan(coeffs[1]);  // f'(0)= coeffs[1], px=0
 
 
           // creating state variables
           Eigen::VectorXd state(6);
+          // px = 0, py = 0, and psi = 0, since all calculation are in car's coordinate system
           state << 0, 0, 0, v, cte, epsi;
           //Calling MPC solve method
           auto vars = mpc.Solve(state, coeffs);
@@ -135,6 +134,7 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
+          //msgJson["steering_angle"] = steer_value/deg2rad(25);
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
@@ -164,10 +164,9 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-
-          for (unsigned int i = 1; i < 100; i+=3) {
-            next_x_vals.push_back(i);
-            next_y_vals.push_back(polyeval(coeffs, (double)i));
+          for (unsigned int i = 1; i < 30; i++) {
+            next_x_vals.push_back(i*3);     // multiplying increment 3 for x and then calculating y from x using the polonomial coefficient calculated before
+            next_y_vals.push_back(polyeval(coeffs, (double)i*3));
           }
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
