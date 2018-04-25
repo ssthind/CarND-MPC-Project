@@ -20,16 +20,16 @@ Steering angle: `-delta` . this should be in range [-25, 25] degrees. Positive S
 Throttle: `a`. this should be in range [-1, 1]. Positive throttle indicates accleration and negative throttle indicates breaking.
 
 #### update equations
-'''
+```
 x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
 y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
 psi_[t+1] = psi[t] + v[t] / Lf * (-1) * delta[t] * dt
 v_[t+1] = v[t] + a[t] * dt
 cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
 epsi[t+1] = psi[t] - psides[t] + v[t] *(-1) * delta[t] / Lf * dt
-'''
+----
 here Lf : distance between center of car and front axle
-
+```
 ### Time lenght and lapsed duration (N & dt)
 N : future sample considered during solving of MPC optimation problem. Final value of 10 choosen, other higher values resulted in processing delay(degrading computational performace and unknown processing latency) and lower values does NOT optimatize better of path/curve.
 dt : sampling interval duration, setting equal to latency to simplefy considering latency between actuator application and response
